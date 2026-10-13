@@ -1,0 +1,4 @@
+__pycache__/
+.playwright-mcp/
+.new_refresh_token
+.DS_Store
