@@ -17,7 +17,8 @@ def get_access_token():
     if os.environ.get("KAKAO_CLIENT_SECRET"):
         data["client_secret"] = os.environ["KAKAO_CLIENT_SECRET"]
     resp = requests.post(TOKEN_URL, data=data, timeout=10)
-    resp.raise_for_status()
+    if not resp.ok:
+        raise SystemExit(f"카카오 토큰 갱신 실패: {resp.status_code} {resp.text}")
     token = resp.json()
     # 만료 1개월 이내면 새 refresh token이 내려옴 → 워크플로가 GitHub Secret에 다시 저장
     if "refresh_token" in token:
