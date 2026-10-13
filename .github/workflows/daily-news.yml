@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: "30 22 * * *"  # UTC 22:30 = KST 07:30 (GitHub 사정으로 수~수십 분 늦을 수 있음)
   workflow_dispatch:
+    inputs:
+      days:
+        description: "수집 기간(일). 테스트할 때만 늘리세요"
+        default: "1"
 
 jobs:
   send:
@@ -19,6 +23,7 @@ jobs:
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          WINDOW_DAYS: ${{ inputs.days }}
       # 카카오가 새 refresh token을 내려준 경우(만료 1개월 이내) Secret 자동 갱신
       - name: Update refresh token
         if: always() && hashFiles('.new_refresh_token') != ''

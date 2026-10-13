@@ -1,5 +1,6 @@
 import html
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -16,7 +17,8 @@ def time_window(now=None):
     end = now.replace(hour=7, minute=0, second=0, microsecond=0)
     if now < end:
         end -= timedelta(days=1)
-    return end - timedelta(days=1), end
+    days = int(os.environ.get("WINDOW_DAYS") or 1)  # 수동 테스트 때만 늘려 씀
+    return end - timedelta(days=days), end
 
 
 def clean(text):
