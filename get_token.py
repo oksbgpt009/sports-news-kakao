@@ -1,5 +1,6 @@
-"""최초 1회만 PC에서 실행: 카카오 refresh token 발급
-(입력값은 화면에 표시되지 않음. 출력된 토큰은 GitHub Secret에 등록 후 창을 닫으세요)"""
+"""PC에서 실행: 카카오 refresh token 발급 → GitHub Secret 자동 등록
+(입력값은 화면에 표시되지 않음. gh 로그인이 안 돼 있으면 토큰을 출력하니 직접 등록)"""
+import subprocess
 from getpass import getpass
 
 import requests
@@ -29,5 +30,11 @@ if client_secret:
 resp = requests.post("https://kauth.kakao.com/oauth/token", data=data, timeout=10)
 if not resp.ok:
     raise SystemExit(f"카카오 토큰 발급 실패: {resp.status_code} {resp.text}")
-print("\nKAKAO_REFRESH_TOKEN (GitHub Secret에 등록):")
-print(resp.json()["refresh_token"])
+token = resp.json()["refresh_token"]
+# 손으로 복사하다 틀리는 일이 없도록 gh 로 바로 등록 (이 폴더의 GitHub 저장소 기준)
+try:
+    subprocess.run(["gh", "secret", "set", "KAKAO_REFRESH_TOKEN", "--body", token], check=True)
+    print("\nKAKAO_REFRESH_TOKEN 을 GitHub Secret 에 등록했습니다.")
+except (OSError, subprocess.CalledProcessError):
+    print("\n자동 등록 실패. 아래 값을 GitHub Secret KAKAO_REFRESH_TOKEN 에 직접 등록하세요:")
+    print(token)
