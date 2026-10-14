@@ -1,3 +1,4 @@
+import os
 import sys
 
 import kakao
@@ -24,15 +25,30 @@ def main():
         return
 
     # 기사가 없는 종목은 보내지 않음. 전부 없으면 아무것도 보내지 않고 종료
-    results = [(header, articles) for header, articles in results if articles]
-    if not results:
-        print("해당 기간 기사 없음: 전송 안 함")
-        return
+    sent = [(header, articles) for header, articles in results if articles]
+    if sent:
+        token = kakao.get_access_token()
+        for header, articles in sent:
+            kakao.send(token, kakao.build_template(header, articles))
+    write_log(period, results)
 
-    token = kakao.get_access_token()
+
+def write_log(period, results):
+    """발송 이력: 실행 로그에 출력하고, GitHub Actions 실행 요약 화면에도 표로 남김."""
+    lines = [f"## 발송 이력 ({period})", "", "| 종목 | 기사 시각 | 제목 |", "|---|---|---|"]
     for header, articles in results:
-        kakao.send(token, kakao.build_template(header, articles))
-        print(f"{header}: {len(articles)}건 전송")
+        name = header.split(" | ")[0]
+        print(f"{header}: {len(articles)}건 전송" if articles else f"{header}: 기사 없음, 전송 안 함")
+        for a in articles:
+            print(f"  - [{a['published']:%m/%d %H:%M}] {a['title']}\n    {a['link']}")
+            title = a["title"].replace("|", "/")
+            lines.append(f"| {name} | {a['published']:%m/%d %H:%M} | [{title}]({a['link']}) |")
+        if not articles:
+            lines.append(f"| {name} | - | 기사 없음 (전송 안 함) |")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
 
 
 if __name__ == "__main__":
