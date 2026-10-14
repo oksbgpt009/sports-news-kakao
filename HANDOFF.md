@@ -115,7 +115,7 @@ developers.kakao.com → 앱 생성(앱 이름 `스포츠단 뉴스`, 회사명 
 | `config.py` | 종목별 검색어·필터 (`queries`, `title_any`, `topic_any`) |
 | `news.py` | 네이버 검색 페이지 파싱, 기간 필터 (`WINDOW_DAYS` 로 테스트 시 기간 확장) |
 | `kakao.py` | 토큰 갱신(실패 시 카카오 오류 내용 출력), 나에게 보내기 (2~3건 리스트, 1건 텍스트) |
-| `main.py` | 수집 → 기사 있는 종목만 전송. `--dry-run` 이면 전송 없이 출력 |
+| `main.py` | 수집 → 기사 있는 종목만 전송. `--dry-run` 이면 전송 없이 출력. **발송 이력**: 로그에 기사 제목·링크 출력 + Actions 실행 요약(Summary) 화면에 표로 기록 (90일 보관) |
 | `get_token.py` | refresh token 발급 + GitHub Secret 자동 등록 |
 | `.github/workflows/daily-news.yml` | 매일 07:30, 수동 실행 시 `days` 입력 |
 
