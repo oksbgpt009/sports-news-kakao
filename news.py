@@ -12,13 +12,14 @@ HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
 def time_window(now=None):
-    """전일 07:00 ~ 당일 07:00 (KST). 07시 이전에 실행되면 하루 앞 구간."""
+    """하루 두 번 (KST): 06:30 실행 → 전일 18:00~당일 06:00, 18:30 실행 → 당일 06:00~18:00.
+    실행 시각 직전의 06시 또는 18시를 끝으로 하는 12시간 구간."""
     now = now or datetime.now(KST)
-    end = now.replace(hour=7, minute=0, second=0, microsecond=0)
-    if now < end:
-        end -= timedelta(days=1)
-    days = int(os.environ.get("WINDOW_DAYS") or 1)  # 수동 테스트 때만 늘려 씀
-    return end - timedelta(days=days), end
+    end = now.replace(hour=18 if now.hour >= 18 else 6, minute=0, second=0, microsecond=0)
+    if now < end:  # 06시 전에 실행되면 전일 18시까지
+        end -= timedelta(hours=12)
+    days = os.environ.get("WINDOW_DAYS")  # 수동 테스트 때만 일 단위로 늘려 씀
+    return end - (timedelta(days=int(days)) if days else timedelta(hours=12)), end
 
 
 def clean(text):
@@ -96,7 +97,8 @@ def collect(category, start, end, limit):
             if title in articles:
                 continue
             published = published_at(item)
-            if published and start <= published < end:
+            # 경계 시각(06:00/18:00 정각) 기사는 앞뒤 두 번 모두 보냄
+            if published and start <= published <= end:
                 articles[title] = {
                     "title": title,
                     "description": desc,
