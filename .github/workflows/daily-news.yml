@@ -1,10 +1,9 @@
 name: daily-sports-news
 
 on:
-  schedule:
-    # 하루 두 번 (GitHub 사정으로 수~수십 분 늦을 수 있음)
-    - cron: "30 21 * * *"  # UTC 21:30 = KST 06:30 → 전일 18:00~당일 06:00 기사
-    - cron: "30 9 * * *"   # UTC 09:30 = KST 18:30 → 당일 06:00~18:00 기사
+  # 매일 06:30, 18:30(KST)에 cron-job.org 가 GitHub API 로 이 워크플로를 실행시킴.
+  # (GitHub 자체 schedule 은 2~5시간씩 늦어서 사용 안 함. 같이 켜두면 중복 발송됨)
+  # 06:30 실행 → 전일 18:00~당일 06:00 기사, 18:30 실행 → 당일 06:00~18:00 기사
   workflow_dispatch:
     inputs:
       days:
