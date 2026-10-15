@@ -22,9 +22,17 @@
 
 ## 1. 현재 동작
 
-- **GitHub Actions** (`.github/workflows/daily-news.yml`) 가 **하루 두 번** 실행 (10/14 변경, 수~수십 분 지연 가능)
-  - **06:30 KST** (cron `30 21 * * *`) → **전일 18:00 ~ 당일 06:00** 기사
-  - **18:30 KST** (cron `30 9 * * *`) → **당일 06:00 ~ 18:00** 기사
+- **GitHub Actions** (`.github/workflows/daily-news.yml`) 가 **하루 두 번** 실행 (10/14 변경)
+  - **06:30 KST** → **전일 18:00 ~ 당일 06:00** 기사
+  - **18:30 KST** → **당일 06:00 ~ 18:00** 기사
+  - **실행 버튼은 cron-job.org 가 누름** (10/15 변경): GitHub 자체 schedule 이 2~5시간씩 늦어서 제거함. 다시 켜면 중복 발송되니 주의
+    - cron-job.org 계정의 작업 「스포츠단 뉴스 카톡 (06:30, 18:30)」: crontab `30 6,18 * * *`, 시간대 Asia/Seoul
+    - POST `https://api.github.com/repos/oksbgpt009/sports-news-kakao/actions/workflows/daily-news.yml/dispatches`, body `{"ref":"main"}`
+    - 헤더: `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `Content-Type: application/json`, `Authorization: Bearer <PAT>` (`Bearer ` 빠지면 401)
+    - PAT: fine-grained `cron-job-sports-news`, 이 저장소만, Actions 읽기·쓰기, **2027-10-14 만료** → 만료 전 새로 만들어 cron-job.org 헤더 교체
+    - 정상 응답 204. cron-job.org 의 HISTORY 에서 실행 기록 확인 가능
+    - 참고: GitHub 가 API 버전 `2022-11-28` 을 deprecated 처리(2028-03 종료 예정). 그 전에 새 버전으로 헤더 변경 필요
+  - 네트워크 대응 (10/15): 요청 실패 시 3번까지 재시도. 해외 서버에서 네이버 스포츠 기사 페이지가 가끔 무응답 → 그 기사만 'N시간 전'으로 시각 추정하고 계속 진행 (전체 중단 안 함)
   - 경계 시각(06:00/18:00 정각) 기사는 양쪽 모두에 포함 (중복 발송 허용 요청)
 - 기사는 네이버 뉴스 **검색 결과 페이지**에서 수집 (API 키 불필요. 네이버 검색 API는 신규 신청 막힘)
   - 기사 시각은 네이버뉴스 기사 페이지의 입력시각(`serviceDatetime`)으로 확인
