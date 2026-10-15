@@ -2,6 +2,7 @@ import html
 import json
 import os
 import re
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -27,9 +28,17 @@ def clean(text):
 
 
 def fetch(url, params=None):
-    resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
-    return resp.text
+    # 네이버가 가끔 응답을 안 줘서(타임아웃) 전체가 실패하는 일이 있어 3번까지 재시도
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, params=params, headers=HEADERS, timeout=20)
+            resp.raise_for_status()
+            return resp.text
+        except requests.RequestException as e:
+            if attempt == 2:
+                raise
+            print(f"  재시도 {attempt + 1}/2: {url} ({type(e).__name__})")
+            time.sleep(5)
 
 
 def age_minutes(text):
