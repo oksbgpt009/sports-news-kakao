@@ -84,7 +84,13 @@ def search(query, start, end):
 def published_at(item):
     """네이버뉴스 기사는 기사 페이지의 정확한 입력시각, 그 외는 'N시간 전'으로 추정."""
     if item["link"].startswith("https://n.news.naver.com/"):
-        m = re.search(r"serviceDatetime\W+(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)", fetch(item["link"]))
+        try:
+            page = fetch(item["link"])
+        except requests.RequestException as e:
+            # 해외(GitHub) 서버에서 네이버 스포츠 기사 페이지가 가끔 응답하지 않음 → 'N시간 전'으로 대체
+            print(f"  기사 페이지 실패, 'N시간 전'으로 추정: {item['link']} ({type(e).__name__})")
+            page = ""
+        m = re.search(r"serviceDatetime\W+(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)", page)
         if m:
             return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST)
     if item["age"] is not None:
@@ -95,7 +101,12 @@ def published_at(item):
 def collect(category, start, end, limit):
     articles = {}
     for query in category["queries"]:
-        for item in search(query, start, end):
+        try:
+            items = search(query, start, end)
+        except requests.RequestException as e:
+            print(f"  검색 실패, 건너뜀: '{query}' ({type(e).__name__})")  # 다른 검색어·종목은 계속
+            continue
+        for item in items:
             title, desc = item["title"], item["description"]
             # 제목에 대상이 있어야 함 (지나가듯 언급된 기사 제외), 사진기사 제외
             if not any(k in title for k in category["title_any"]) or "포토]" in title:
