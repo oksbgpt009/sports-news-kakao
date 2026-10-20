@@ -13,6 +13,8 @@ on:
 jobs:
   send:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # docs/ 기사 목록 페이지 커밋용
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,6 +27,13 @@ jobs:
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           WINDOW_DAYS: ${{ inputs.days }}
+      # 카톡 '전체 N건 보기' 페이지를 저장소 docs/ 에 올림 → GitHub Pages 가 1분 내 공개
+      - name: Publish article list
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          [ -d docs ] && git add -A docs
+          git diff --cached --quiet || (git commit -m "기사 목록 추가" && git push)
       # 카카오가 새 refresh token을 내려준 경우(만료 1개월 이내) Secret 자동 갱신
       - name: Update refresh token
         if: always() && hashFiles('.new_refresh_token') != ''
