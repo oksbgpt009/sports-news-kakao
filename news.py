@@ -4,6 +4,7 @@ import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 
 import requests
 
@@ -69,11 +70,15 @@ def search(query, start, end):
             if age is None:
                 age = age_minutes(sub.get("text"))
         # 네이버뉴스 링크는 n.news.naver.com 형태로 통일 (스포츠 기사는 자동 리다이렉트)
+        title = clean(props.get("title"))
         m2 = re.search(r"naver\.com/.*article/(\d+)/(\d+)", link or "")
         if m2:
             link = f"https://n.news.naver.com/article/{m2.group(1)}/{m2.group(2)}"
+        else:
+            # 네이버뉴스에 없는 언론사 원문은 카카오 미등록 도메인이라 링크가 깨짐 → 제목으로 네이버 뉴스 검색
+            link = f"{SEARCH_URL}?{urlencode({'where': 'news', 'query': title})}"
         items.append({
-            "title": clean(props.get("title")),
+            "title": title,
             "description": clean(props.get("content")),
             "link": link,
             "age": age,
@@ -98,7 +103,7 @@ def published_at(item):
     return None
 
 
-def collect(category, start, end, limit):
+def collect(category, start, end):
     articles = {}
     for query in category["queries"]:
         try:
@@ -125,4 +130,5 @@ def collect(category, start, end, limit):
                     "link": item["link"],  # 네이버 뉴스 링크 우선 (카카오 도메인 등록용)
                     "published": published,
                 }
-    return sorted(articles.values(), key=lambda a: a["published"], reverse=True)[:limit]
+    # 기간 내 기사 전부 (카톡에는 앞에서 몇 개만, 나머지는 전체 목록 페이지에)
+    return sorted(articles.values(), key=lambda a: a["published"], reverse=True)

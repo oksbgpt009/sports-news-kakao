@@ -26,4 +26,7 @@ CATEGORIES = [
     },
 ]
 
-ARTICLES_PER_CATEGORY = 3
+ARTICLES_PER_CATEGORY = 3  # 카톡에 보이는 개수. 기간 내 전체는 아래 페이지에
+
+# 기간별 기사 전체 목록 페이지 (GitHub Pages, 저장소 docs/ 폴더)
+PAGES_URL = "https://oksbgpt009.github.io/sports-news-kakao/"

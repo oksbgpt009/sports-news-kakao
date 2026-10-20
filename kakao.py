@@ -31,13 +31,15 @@ def _link(url):
     return {"web_url": url, "mobile_web_url": url}
 
 
-def build_template(header, articles):
+def build_template(header, articles, list_url, total):
     # 리스트 템플릿은 항목 2~3개만 허용 → 1개는 텍스트 템플릿 (0개는 main에서 전송 생략)
+    # list_url: 이번 기간 기사 전체 목록 페이지, total: 전체 건수
     if len(articles) >= 2:
         return {
             "object_type": "list",
             "header_title": header,
-            "header_link": _link(articles[0]["link"]),
+            "header_link": _link(list_url),
+            "buttons": [{"title": f"전체 {total}건 보기", "link": _link(list_url)}],
             "contents": [
                 {
                     "title": a["title"],

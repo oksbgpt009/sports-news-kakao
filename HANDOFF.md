@@ -39,6 +39,9 @@
   - GitHub 해외 서버에서도 네이버 접속 정상 확인됨 (10/13)
 - 대상 (`config.py`): 🏐 배구·🏉 럭비 = OK저축은행 읏맨 배구단/럭비단, ⛳ 골프 = OK배정장학재단·김우정·이태희. **제목에 대상이 있어야** 함, 사진기사(`포토]`) 제외
 - 종목별 1통, 최대 3기사(제목+링크). **기사 없는 종목은 안 보냄**, 전부 없으면 그날은 아무것도 안 감
+- **전체 목록 페이지** (10/20): 기간 내 기사는 전부 수집해 `docs/YYYYMMDD-HH.html` 로 저장 → 워크플로가 커밋 → GitHub Pages(`https://oksbgpt009.github.io/sports-news-kakao/`) 로 공개. 카톡 리스트 메시지의 제목·「전체 N건 보기」 버튼이 이 페이지(종목 위치 `#c0`~`#c2`)로 연결. 페이지는 발송 후 1분쯤 뒤 열림
+  - 이를 위해 저장소를 **Public** 으로 전환 (무료 계정은 Private 저장소에 Pages 불가). 키·토큰은 Secrets 에만 있음
+- **네이버뉴스에 없는 기사** (10/20): 언론사 원문 링크는 카카오 미등록 도메인이라 news.naver.com 첫 화면으로 빠짐 → 기사 제목으로 네이버 뉴스 검색한 결과(`search.naver.com`)로 연결
 - 카톡은 **refresh token 을 발급받을 때 로그인한 카카오 계정의 "나와의 채팅"** 으로 감 → 계정 바꾸려면 토큰만 다시 발급하면 됨
 - 수동 실행 시 `days` 입력으로 수집 기간을 일 단위로 늘릴 수 있음 (테스트용. 비우면 실제와 같은 12시간)
 - `get_token.py` 는 키를 붙여넣지 않고 **복사 후 엔터**하면 클립보드에서 읽음 (회사 PC 터미널에서 숨김 입력 붙여넣기가 안 돼서 변경)
@@ -106,7 +109,7 @@ developers.kakao.com → 앱 생성(앱 이름 `스포츠단 뉴스`, 회사명 
 | 제품 설정 → 카카오 로그인 → 일반 | 사용 설정 **ON** |
 | 앱 → 플랫폼 키 → REST API 키 클릭 | 카카오 로그인 리다이렉트 URI: `https://localhost` → 저장. 이 화면에 REST API 키·클라이언트 시크릿(기본 ON) 있음 |
 | 제품 설정 → 카카오 로그인 → 동의항목 | 접근권한 표 **카카오톡 메시지 전송(talk_message)** → 설정 → **선택 동의**, 목적 `뉴스 알림을 나에게 보내기 위함` → 저장 |
-| 앱 → 제품 링크 관리 → 웹 도메인 | `https://n.news.naver.com`, `https://m.sports.naver.com`, `https://news.naver.com` |
+| 앱 → 제품 링크 관리 → 웹 도메인 | `https://n.news.naver.com`, `https://m.sports.naver.com`, `https://news.naver.com`, `https://search.naver.com`, `https://oksbgpt009.github.io` (등록 안 된 도메인 링크는 첫 번째 도메인 첫 화면으로 열림) |
 
 (카카오 콘솔 메뉴 구조가 예전 문서와 다름: Redirect URI 는 "플랫폼 키" 안, 사이트 도메인은 "제품 링크 관리" 안)
 
@@ -123,7 +126,7 @@ developers.kakao.com → 앱 생성(앱 이름 `스포츠단 뉴스`, 회사명 
 | `config.py` | 종목별 검색어·필터 (`queries`, `title_any`, `topic_any`) |
 | `news.py` | 네이버 검색 페이지 파싱, 기간 필터 (`WINDOW_DAYS` 로 테스트 시 기간 확장) |
 | `kakao.py` | 토큰 갱신(실패 시 카카오 오류 내용 출력), 나에게 보내기 (2~3건 리스트, 1건 텍스트) |
-| `main.py` | 수집 → 기사 있는 종목만 전송. `--dry-run` 이면 전송 없이 출력. **발송 이력**: 로그에 기사 제목·링크 출력 + Actions 실행 요약(Summary) 화면에 표로 기록 (90일 보관) |
+| `main.py` | 수집 → 전체 목록 페이지(`docs/`) 작성 → 기사 있는 종목만 전송. `--dry-run` 이면 전송 없이 출력. **발송 이력**: 로그에 기사 제목·링크 출력 + Actions 실행 요약(Summary) 화면에 표로 기록 (90일 보관) |
 | `get_token.py` | refresh token 발급 + GitHub Secret 자동 등록 |
 | `.github/workflows/daily-news.yml` | 매일 07:30, 수동 실행 시 `days` 입력 |
 
