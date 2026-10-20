@@ -10,6 +10,8 @@ import requests
 
 KST = timezone(timedelta(hours=9))
 SEARCH_URL = "https://search.naver.com/search.naver"
+MORE_URL = "https://s.search.naver.com/p/newssearch/4/api/tab/more"
+MAX_PAGES = 10  # 검색어당 최대 100건 (12시간 기사로는 충분)
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -49,12 +51,26 @@ def age_minutes(text):
 
 
 def search(query, start, end):
-    """네이버 뉴스 검색 결과 페이지(최신순, 날짜 범위)를 받아 기사 목록을 뽑는다."""
-    page = fetch(SEARCH_URL, {
-        "where": "news", "sort": 1, "pd": 3, "query": query,
+    """네이버 뉴스 검색(최신순, 날짜 범위)의 '더보기' 주소로 10건씩 끝까지 넘겨 기사 목록을 뽑는다.
+    (검색 결과 화면 자체는 최신 10건만 줘서 기사가 많은 날 빠짐)"""
+    url = MORE_URL + "?" + urlencode({
+        "query": query, "sort": 1, "pd": 3, "start": 1, "ssc": "tab.news.all",
         "ds": f"{start:%Y.%m.%d}", "de": f"{end:%Y.%m.%d}",
+        "nso": f"so:dd,p:from{start:%Y%m%d}to{end:%Y%m%d},a:all",
     })
-    print(f"  검색 '{query}': 페이지 {len(page)}자")  # 0이나 매우 작으면 접속 차단 의심
+    items = []
+    for _ in range(MAX_PAGES):
+        data = json.loads(fetch(url))
+        found = parse_items("".join(c.get("script", "") + c.get("html", "") for c in data.get("collection", [])))
+        items += found
+        url = data.get("url")  # 다음 10건 주소. 마지막이면 비어 있음
+        if not url or not found:
+            break
+    print(f"  검색 '{query}': {len(items)}건")  # 계속 0이면 접속 차단·구조 변경 의심
+    return items
+
+
+def parse_items(page):
     items = []
     # 기사 하나가 {"props":{...},"templateId":"newsItem"} 형태의 JSON으로 들어 있음
     for m in re.finditer(r'"templateId":"newsItem"', page):
